@@ -1,7 +1,10 @@
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
+import { db } from "@/lib/db";
 import { HeroVisual } from "@/components/marketing/HeroVisual";
 import { Button } from "@/components/ui/Button";
+
+export const revalidate = 300; // ISR: каунты обновляются раз в 5 минут
 
 const categoryKeys = [
   "drawings",
@@ -15,8 +18,43 @@ const categoryKeys = [
 const stepKeys = ["1", "2", "3", "4"] as const;
 const privacyKeys = ["nicknames", "city", "metadata", "nda"] as const;
 
-export default function LandingPage() {
-  const t = useTranslations();
+function formatCount(n: number): string {
+  if (n === 0) return "Скоро";
+  const formatted = new Intl.NumberFormat("ru-RU").format(n);
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  let word = "работ";
+  if (mod10 === 1 && mod100 !== 11) word = "работа";
+  else if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) word = "работы";
+  return `${formatted} ${word}`;
+}
+
+async function loadCategoryCounts(): Promise<Record<string, number>> {
+  const roots = await db.category.findMany({
+    where: { parentId: null },
+    select: {
+      slug: true,
+      id: true,
+      children: { select: { id: true } },
+    },
+  });
+  const result: Record<string, number> = {};
+  await Promise.all(
+    roots.map(async (root) => {
+      const ids = [root.id, ...root.children.map((c) => c.id)];
+      result[root.slug] = await db.catalogItem.count({
+        where: { isPublished: true, categoryId: { in: ids } },
+      });
+    })
+  );
+  return result;
+}
+
+export default async function LandingPage() {
+  const [t, counts] = await Promise.all([
+    getTranslations(),
+    loadCategoryCounts(),
+  ]);
 
   return (
     <>
@@ -82,9 +120,10 @@ export default function LandingPage() {
 
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {categoryKeys.map((key) => (
-                <article
+                <Link
                   key={key}
-                  className="group flex flex-col gap-5 rounded-[14px] border border-border-subtle bg-surface p-7 transition-colors hover:border-border-strong"
+                  href={`/catalog?category=${key}`}
+                  className="group flex flex-col gap-5 rounded-[14px] border border-border-subtle bg-surface p-7 transition-colors hover:border-brand"
                 >
                   <CategoryIcon variant={key} />
                   <h3 className="font-display text-[22px] font-semibold -tracking-[0.01em] text-fg">
@@ -95,13 +134,13 @@ export default function LandingPage() {
                   </p>
                   <div className="mt-auto flex items-center gap-2 pt-2">
                     <span className="text-xs font-medium tracking-[0.08em] text-brand">
-                      {t(`categories.items.${key}.count`)}
+                      {formatCount(counts[key] ?? 0)}
                     </span>
                     <span className="text-brand transition-transform group-hover:translate-x-1">
                       →
                     </span>
                   </div>
-                </article>
+                </Link>
               ))}
             </div>
           </div>
