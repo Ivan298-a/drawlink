@@ -1,26 +1,289 @@
 @import "tailwindcss";
 
+/* ============================================
+   DrawLink Design Tokens
+   Графит + Янтарь · Чертёжный/инженерный стиль
+   ============================================ */
+
+@theme {
+  /* Fonts */
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-display: var(--font-unbounded), var(--font-inter), system-ui, sans-serif;
+
+  /* Brand */
+  --color-amber-50:  oklch(0.97 0.02 70);
+  --color-amber-100: oklch(0.93 0.06 70);
+  --color-amber-300: oklch(0.80 0.13 70);
+  --color-amber-400: oklch(0.74 0.15 70);
+  --color-amber-500: oklch(0.69 0.16 70);   /* #D4A04A — основной янтарь */
+  --color-amber-600: oklch(0.60 0.15 65);
+  --color-amber-700: oklch(0.50 0.13 60);
+
+  /* Graphite (dark surfaces) */
+  --color-graphite-50:  oklch(0.96 0.003 270);
+  --color-graphite-100: oklch(0.90 0.004 270);
+  --color-graphite-200: oklch(0.78 0.006 270);
+  --color-graphite-300: oklch(0.62 0.008 270);
+  --color-graphite-400: oklch(0.48 0.010 270);
+  --color-graphite-500: oklch(0.35 0.011 270);
+  --color-graphite-600: oklch(0.26 0.011 270);
+  --color-graphite-700: oklch(0.21 0.011 270);
+  --color-graphite-800: oklch(0.17 0.010 270);
+  --color-graphite-900: oklch(0.13 0.009 270);
+  --color-graphite-950: oklch(0.10 0.008 270);
+
+  /* Paper (light surfaces) */
+  --color-paper-50:  oklch(0.99 0.005 80);   /* #FBFAF6 */
+  --color-paper-100: oklch(0.97 0.008 80);   /* #F5F2EA — ватман */
+  --color-paper-200: oklch(0.93 0.012 80);   /* #ECE7DA */
+  --color-paper-300: oklch(0.85 0.018 80);
+
+  /* Semantic */
+  --color-success: oklch(0.70 0.16 145);
+  --color-warning: oklch(0.78 0.16 80);
+  --color-danger:  oklch(0.62 0.20 25);
+  --color-info:    oklch(0.60 0.16 250);
+}
+
+/* =====================================
+   Light theme (default — paper)
+   ===================================== */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-base:       var(--color-paper-100);
+  --bg-surface:    #ffffff;
+  --bg-inset:      var(--color-paper-200);
+  --bg-elevated:   #ffffff;
+
+  --border-subtle: var(--color-paper-300);
+  --border-strong: oklch(0.74 0.018 80);
+
+  --text-primary:   var(--color-graphite-900);
+  --text-secondary: var(--color-graphite-500);
+  --text-muted:     var(--color-graphite-400);
+  --text-inverse:   var(--color-paper-50);
+
+  --brand:           oklch(0.55 0.15 65);    /* потемнее янтарь для контраста на белом */
+  --brand-hover:     oklch(0.48 0.14 65);
+  --brand-foreground: #ffffff;
 }
 
+/* =====================================
+   Dark theme — графит + янтарь
+   ===================================== */
+.dark {
+  --bg-base:       var(--color-graphite-950);
+  --bg-surface:    var(--color-graphite-900);
+  --bg-inset:      var(--color-graphite-950);
+  --bg-elevated:   var(--color-graphite-800);
+
+  --border-subtle: var(--color-graphite-700);
+  --border-strong: var(--color-graphite-600);
+
+  --text-primary:   oklch(0.96 0.003 270);
+  --text-secondary: var(--color-graphite-200);
+  --text-muted:     var(--color-graphite-300);
+  --text-inverse:   var(--color-graphite-950);
+
+  --brand:           var(--color-amber-500);
+  --brand-hover:     var(--color-amber-400);
+  --brand-foreground: var(--color-graphite-950);
+}
+
+/* Expose semantic tokens to Tailwind utilities via @theme inline */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg:          var(--bg-base);
+  --color-surface:     var(--bg-surface);
+  --color-inset:       var(--bg-inset);
+  --color-elevated:    var(--bg-elevated);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-strong: var(--border-strong);
+  --color-fg:          var(--text-primary);
+  --color-fg-secondary: var(--text-secondary);
+  --color-fg-muted:    var(--text-muted);
+  --color-fg-inverse:  var(--text-inverse);
+  --color-brand:       var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-foreground: var(--brand-foreground);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* =====================================
+   Base styles
+   ===================================== */
+* {
+  border-color: var(--border-subtle);
+}
+
+html, body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Selection */
+::selection {
+  background: var(--brand);
+  color: var(--brand-foreground);
+}
+
+/* Chrome/Edge autofill — убираем белый фон в инпутах */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px var(--bg-inset) inset !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
+  caret-color: var(--text-primary);
+  transition: background-color 9999s ease-in-out 0s;
+  border-radius: inherit;
+}
+
+/* Focus ring */
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Scrollbar — subtle, не AI-шный */
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 6px; border: 3px solid var(--bg-base); }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* =====================================
+   Hover-эффект: тёплый янтарный halo + лёгкий lift.
+   Класс остался .btn-shimmer для совместимости вызовов.
+   ===================================== */
+/* Эффект «инженерная плашка»: статичный янтарный halo + lift, плюс
+   один быстрый узкий блик слева направо при наведении. */
+@keyframes btn-streak {
+  0%   { transform: translateX(-150%); opacity: 0; }
+  20%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { transform: translateX(150%); opacity: 0; }
+}
+.btn-shimmer {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  transition:
+    transform 160ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    box-shadow 180ms ease-out,
+    filter 160ms ease-out,
+    border-color 160ms ease-out;
+}
+.btn-shimmer:hover,
+.btn-shimmer:focus-visible {
+  transform: translateY(-2px) scale(1.02);
+  filter: brightness(1.08);
+  box-shadow:
+    0 0 0 1.5px color-mix(in oklch, var(--brand) 55%, transparent),
+    0 10px 24px -6px color-mix(in oklch, var(--brand) 60%, transparent),
+    0 0 36px -2px color-mix(in oklch, var(--brand) 45%, transparent);
+}
+.btn-shimmer:active {
+  transform: translateY(0) scale(0.99);
+  filter: brightness(0.94);
+  transition-duration: 70ms;
+}
+.btn-shimmer.btn-shimmer-amber:hover,
+.btn-shimmer.btn-shimmer-amber:focus-visible {
+  border-color: var(--brand);
+  filter: none;
+}
+/* Узкий молниеносный блик — только на primary, 180мс linear, один раз */
+.btn-shimmer:not(.btn-shimmer-amber)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 46%,
+    color-mix(in oklch, white 70%, transparent) 50%,
+    transparent 54%
+  );
+  transform: translateX(-120%);
+  opacity: 0;
+  z-index: 1;
+}
+.btn-shimmer:not(.btn-shimmer-amber):hover::after,
+.btn-shimmer:not(.btn-shimmer-amber):focus-visible::after {
+  animation: btn-streak 180ms linear forwards;
+}
+.btn-shimmer > * {
+  position: relative;
+  z-index: 2;
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn-shimmer,
+  .btn-shimmer:hover,
+  .btn-shimmer:focus-visible,
+  .btn-shimmer:active {
+    transition: none;
+    transform: none;
+    filter: none;
+    animation: none;
+  }
+  .btn-shimmer::after { display: none; }
+}
+/* Уважаем prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .btn-shimmer,
+  .btn-shimmer:hover,
+  .btn-shimmer:focus-visible,
+  .btn-shimmer:active {
+    transition: none;
+    transform: none;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* =====================================
+   Technical motifs (декор-классы)
+   ===================================== */
+
+/* Grid background — как чертёжная бумага */
+.bg-blueprint-grid {
+  background-image:
+    linear-gradient(to right, var(--border-subtle) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border-subtle) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.bg-blueprint-grid-sm {
+  background-image:
+    linear-gradient(to right, var(--border-subtle) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border-subtle) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Размерная линия — декор */
+.dim-line {
+  position: relative;
+  height: 12px;
+}
+.dim-line::before,
+.dim-line::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 12px;
+  background: var(--brand);
+}
+.dim-line::before { left: 0; }
+.dim-line::after { right: 0; }
+.dim-line > span {
+  position: absolute;
+  top: 5px;
+  left: 4px;
+  right: 4px;
+  height: 1px;
+  background: var(--brand);
 }

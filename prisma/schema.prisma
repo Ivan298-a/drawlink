@@ -1,0 +1,450 @@
+// DrawLink — Prisma schema
+// Маркетплейс чертежей: пользователи, города, категории,
+// заказы, отклики, каталог готовых работ, сделки (escrow),
+// чаты, отзывы, споры.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============= ENUMS =============
+
+enum UserRole {
+  STUDENT
+  EXECUTOR
+  ADMIN
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum OrderStatus {
+  DRAFT       // ещё не опубликован
+  OPEN        // ждёт откликов
+  IN_PROGRESS // выбран исполнитель, escrow заморожен
+  REVIEW      // исполнитель загрузил готовое, ждём подтверждения
+  COMPLETED   // подтверждено, деньги ушли исполнителю
+  CANCELLED   // отменён до выбора исполнителя
+  DISPUTED    // открыт спор
+}
+
+enum DeliveryType {
+  DIGITAL          // только файл
+  DIGITAL_AND_PAPER // + физическая копия на A1/A2/A3
+}
+
+enum PaperSize {
+  NONE
+  A4
+  A3
+  A2
+  A1
+}
+
+enum FileFormat {
+  KOMPAS
+  AUTOCAD_DWG
+  SOLIDWORKS
+  INVENTOR
+  PDF
+  JPG
+  PNG
+  OTHER
+}
+
+enum Standard {
+  ESKD
+  SPDS
+  NONE
+}
+
+enum DealStatus {
+  PAYMENT_HELD   // escrow активен
+  RELEASED       // деньги ушли исполнителю
+  REFUNDED       // возвращены покупателю
+  DISPUTED       // открыт спор
+}
+
+enum DealSource {
+  ORDER          // через биржу
+  CATALOG        // покупка готовой работы из каталога
+}
+
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+enum DisputeStatus {
+  OPEN
+  ARBITRATION  // ждёт решения модератора
+  RESOLVED
+}
+
+enum DisputeResolution {
+  ACCEPT_WITH_REVISIONS // исполнитель доделает
+  PARTIAL_REFUND
+  FULL_REFUND
+}
+
+// ============= CITIES =============
+
+model City {
+  id     Int    @id @default(autoincrement())
+  name   String @unique
+  region String?
+
+  users User[]
+
+  @@index([name])
+  @@map("cities")
+}
+
+// ============= USERS =============
+// Публичная сущность — никнейм, рейтинг, верификация.
+// Реальные ФИО/ВУЗ/группа лежат в UserProfile и не видны другим пользователям.
+
+model User {
+  id        String   @id @default(uuid())
+  // Supabase Auth user id — синхронизируется через триггер/webhook
+  authId    String?  @unique @map("auth_id")
+  email     String   @unique
+  nickname  String   @unique
+  role      UserRole @default(STUDENT)
+
+  cityId Int  @map("city_id")
+  city   City @relation(fields: [cityId], references: [id])
+
+  // Верификация (для исполнителей)
+  verificationStatus VerificationStatus @default(PENDING) @map("verification_status")
+  ndaSignedAt        DateTime?          @map("nda_signed_at")
+
+  // Агрегаты (пересчитываются при добавлении отзыва)
+  ratingAvg     Decimal? @db.Decimal(3, 2) @map("rating_avg")
+  reviewsCount  Int      @default(0)        @map("reviews_count")
+  dealsCount    Int      @default(0)        @map("deals_count")
+
+  // Настройки приватности
+  hideFromSameCity Boolean @default(true) @map("hide_from_same_city")
+  hideFromSameVuz  Boolean @default(true) @map("hide_from_same_vuz")
+  showOnline       Boolean @default(true) @map("show_online")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt      @map("updated_at")
+  lastSeenAt DateTime? @map("last_seen_at")
+
+  // Telegram
+  telegramChatId             BigInt?  @unique @map("telegram_chat_id")
+  telegramUsername           String?  @map("telegram_username")
+  telegramConnectToken       String?  @unique @map("telegram_connect_token")
+  telegramConnectExpiresAt   DateTime? @map("telegram_connect_expires_at")
+  notifyTelegram             Boolean  @default(true) @map("notify_telegram")
+
+  profile           UserProfile?
+  executorCategories ExecutorCategory[]
+  ordersAsStudent   Order[]            @relation("student_orders")
+  offers            Offer[]
+  catalogItems      CatalogItem[]
+  dealsAsBuyer      Deal[]             @relation("buyer_deals")
+  dealsAsSeller     Deal[]             @relation("seller_deals")
+  messages          Message[]
+  reviewsGiven      Review[]           @relation("reviews_given")
+  reviewsReceived   Review[]           @relation("reviews_received")
+  disputesOpened    Dispute[]          @relation("disputes_opened")
+
+  @@index([cityId])
+  @@index([role, verificationStatus])
+  @@map("users")
+}
+
+// Приватный профиль — никогда не отдаётся другим пользователям через API.
+// Только админу для модерации и самому юзеру.
+model UserProfile {
+  userId   String  @id @map("user_id")
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  realName String? @map("real_name")
+  vuz      String?
+  groupName String? @map("group_name")
+  phone    String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt      @map("updated_at")
+
+  @@map("user_profiles")
+}
+
+// ============= CATEGORIES =============
+// Иерархия с подразделами. Глубина — 2 уровня.
+
+model Category {
+  id        Int     @id @default(autoincrement())
+  parentId  Int?    @map("parent_id")
+  parent    Category? @relation("CategoryTree", fields: [parentId], references: [id])
+  children  Category[] @relation("CategoryTree")
+
+  name      String
+  slug      String  @unique
+  sortOrder Int     @default(0) @map("sort_order")
+
+  orders        Order[]
+  catalogItems  CatalogItem[]
+  executorCategories ExecutorCategory[]
+
+  @@index([parentId])
+  @@map("categories")
+}
+
+// Связь исполнителя с категориями, в которых он работает (специализация)
+model ExecutorCategory {
+  executorId String @map("executor_id")
+  categoryId Int    @map("category_id")
+  executor   User     @relation(fields: [executorId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  @@id([executorId, categoryId])
+  @@map("executor_categories")
+}
+
+// ============= ORDERS (биржа) =============
+
+model Order {
+  id          String      @id @default(uuid())
+  code        String      @unique // ORD-2026-08471
+  studentId   String      @map("student_id")
+  student     User        @relation("student_orders", fields: [studentId], references: [id])
+
+  categoryId  Int     @map("category_id")
+  category    Category @relation(fields: [categoryId], references: [id])
+
+  title       String
+  description String  @db.Text
+
+  // Параметры
+  fileFormats     FileFormat[] @map("file_formats")
+  deliveryType    DeliveryType @default(DIGITAL) @map("delivery_type")
+  paperSize       PaperSize    @default(NONE)    @map("paper_size")
+  standard        Standard     @default(ESKD)
+  budget          Int          // в копейках/центах для точности
+  deadline        DateTime
+  allowSameCity   Boolean      @default(false) @map("allow_same_city") // авто-true для физических
+
+  status      OrderStatus @default(DRAFT)
+
+  // Файлы методички — Supabase Storage object keys
+  attachments String[]
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  publishedAt DateTime? @map("published_at")
+  closedAt    DateTime? @map("closed_at")
+
+  offers Offer[]
+  deal   Deal?
+
+  @@index([studentId])
+  @@index([categoryId])
+  @@index([status, publishedAt(sort: Desc)])
+  @@map("orders")
+}
+
+model Offer {
+  id         String      @id @default(uuid())
+  orderId    String      @map("order_id")
+  order      Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  executorId String      @map("executor_id")
+  executor   User        @relation(fields: [executorId], references: [id])
+
+  price      Int  // копейки
+  message    String @db.Text
+  etaDays    Int    @map("eta_days")
+
+  status     OfferStatus @default(PENDING)
+  createdAt  DateTime    @default(now()) @map("created_at")
+
+  @@unique([orderId, executorId])
+  @@index([executorId])
+  @@map("offers")
+}
+
+// ============= CATALOG (готовые работы) =============
+
+model CatalogItem {
+  id         String   @id @default(uuid())
+  code       String   @unique // DL-A-0142
+  executorId String   @map("executor_id")
+  executor   User     @relation(fields: [executorId], references: [id])
+
+  categoryId  Int      @map("category_id")
+  category    Category @relation(fields: [categoryId], references: [id])
+
+  title       String
+  description String   @db.Text
+  price       Int      // копейки
+  formats     FileFormat[]
+  paperSize   PaperSize    @default(NONE) @map("paper_size")
+  standard    Standard     @default(ESKD)
+
+  // Watermark-превью и оригинал (приватный bucket)
+  previewUrl  String   @map("preview_url")
+  originalKey String   @map("original_key") // S3 key, signed URL только после оплаты
+
+  isPublished Boolean  @default(false) @map("is_published")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  deals Deal[]
+
+  @@index([executorId])
+  @@index([categoryId, isPublished])
+  @@map("catalog_items")
+}
+
+// ============= DEALS (escrow) =============
+
+model Deal {
+  id            String     @id @default(uuid())
+  source        DealSource
+
+  orderId       String?    @unique @map("order_id")
+  order         Order?     @relation(fields: [orderId], references: [id])
+
+  catalogItemId String?    @map("catalog_item_id")
+  catalogItem   CatalogItem? @relation(fields: [catalogItemId], references: [id])
+
+  buyerId       String     @map("buyer_id")
+  buyer         User       @relation("buyer_deals", fields: [buyerId], references: [id])
+  sellerId      String     @map("seller_id")
+  seller        User       @relation("seller_deals", fields: [sellerId], references: [id])
+
+  amount        Int        // что заплатил buyer (копейки)
+  commission    Int        // 10% — забирает платформа
+  payout        Int        // seller получит = amount - commission
+
+  status        DealStatus @default(PAYMENT_HELD)
+
+  // YooKassa
+  yooKassaPaymentId String? @unique @map("yookassa_payment_id")
+  yooKassaPayoutId  String? @unique @map("yookassa_payout_id")
+
+  createdAt     DateTime @default(now()) @map("created_at")
+  releasedAt    DateTime? @map("released_at")  // деньги ушли seller'у
+  refundedAt    DateTime? @map("refunded_at")
+  autoReleaseAt DateTime? @map("auto_release_at") // 72ч после загрузки готовой работы
+
+  // Готовый файл (после оплаты)
+  deliveredKey  String?  @map("delivered_key")
+  deliveredAt   DateTime? @map("delivered_at")
+
+  chat     Chat?
+  review   Review?
+  dispute  Dispute?
+
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([status])
+  @@map("deals")
+}
+
+// ============= CHAT =============
+
+model Chat {
+  id      String   @id @default(uuid())
+  dealId  String   @unique @map("deal_id")
+  deal    Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  messages Message[]
+
+  @@map("chats")
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  chatId    String   @map("chat_id")
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  senderId  String   @map("sender_id")
+  sender    User     @relation(fields: [senderId], references: [id])
+
+  body         String   @db.Text
+  attachments  String[] // Supabase Storage keys
+
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@index([chatId, createdAt])
+  @@map("messages")
+}
+
+// ============= REVIEWS =============
+
+model Review {
+  id            String   @id @default(uuid())
+  dealId        String   @unique @map("deal_id")
+  deal          Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  authorId      String   @map("author_id")
+  author        User     @relation("reviews_given", fields: [authorId], references: [id])
+  targetId      String   @map("target_id")
+  target        User     @relation("reviews_received", fields: [targetId], references: [id])
+
+  ratingQuality Int      @map("rating_quality")  // 1-5
+  ratingSpeed   Int      @map("rating_speed")
+  ratingComm    Int      @map("rating_comm")
+
+  text          String?  @db.Text
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([targetId, createdAt(sort: Desc)])
+  @@map("reviews")
+}
+
+// ============= DISPUTES =============
+
+model Dispute {
+  id         String        @id @default(uuid())
+  code       String        @unique // DPT-2026-00142
+  dealId     String        @unique @map("deal_id")
+  deal       Deal          @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  openedById String        @map("opened_by_id")
+  openedBy   User          @relation("disputes_opened", fields: [openedById], references: [id])
+
+  reason     String        @db.Text
+  category   String        // quality / deadline / scope / other
+
+  status     DisputeStatus @default(OPEN)
+  resolution DisputeResolution?
+
+  resolutionNote String?  @map("resolution_note") @db.Text
+  resolvedAt     DateTime? @map("resolved_at")
+  autoResolveAt  DateTime? @map("auto_resolve_at") // дедлайн арбитража (24ч)
+
+  createdAt  DateTime      @default(now()) @map("created_at")
+
+  evidences Evidence[]
+
+  @@index([status, createdAt])
+  @@map("disputes")
+}
+
+model Evidence {
+  id         String   @id @default(uuid())
+  disputeId  String   @map("dispute_id")
+  dispute    Dispute  @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  addedById  String   @map("added_by_id")
+
+  text       String?  @db.Text
+  attachments String[] // Supabase Storage keys
+
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([disputeId])
+  @@map("evidences")
+}

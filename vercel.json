@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/auto-release",
+      "schedule": "*/10 * * * *"
+    },
+    {
+      "path": "/api/cron/auto-arbitrage",
+      "schedule": "*/10 * * * *"
+    }
+  ]
+}

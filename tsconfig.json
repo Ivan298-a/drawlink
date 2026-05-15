@@ -30,5 +30,13 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "prisma.config.ts",
+    "prisma/seed.ts",
+    "prisma/bot-dev.ts",
+    "prisma/setup-realtime.ts",
+    "prisma/setup-storage.ts",
+    "prisma/promote-admin.ts"
+  ]
 }
