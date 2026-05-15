@@ -50,11 +50,45 @@ async function loadCategoryCounts(): Promise<Record<string, number>> {
   return result;
 }
 
+type HeroStats = {
+  executors: number;
+  deals: number;
+  rating: number | null;
+};
+
+async function loadHeroStats(): Promise<HeroStats> {
+  const [executors, deals, ratingAgg] = await Promise.all([
+    db.user.count({
+      where: { role: "EXECUTOR", verificationStatus: "APPROVED" },
+    }),
+    db.deal.count({ where: { status: "RELEASED" } }),
+    db.user.aggregate({
+      where: { reviewsCount: { gt: 0 } },
+      _avg: { ratingAvg: true },
+    }),
+  ]);
+  return {
+    executors,
+    deals,
+    rating: ratingAgg._avg.ratingAvg
+      ? Number(ratingAgg._avg.ratingAvg)
+      : null,
+  };
+}
+
+function formatStat(n: number): string {
+  if (n >= 1000) return `${Math.floor(n / 100) / 10}k+`;
+  if (n >= 100) return `${Math.floor(n / 10) * 10}+`;
+  return String(n);
+}
+
 export default async function LandingPage() {
-  const [t, counts] = await Promise.all([
+  const [t, counts, stats] = await Promise.all([
     getTranslations(),
     loadCategoryCounts(),
+    loadHeroStats(),
   ]);
+  const showStats = stats.executors > 0 || stats.deals > 0;
 
   return (
     <>
@@ -88,18 +122,44 @@ export default async function LandingPage() {
                 </Link>
               </div>
 
-              <ul className="mt-2 flex flex-wrap items-center gap-6 divide-x divide-border-subtle">
-                {(["executors", "deals", "rating"] as const).map((k, i) => (
-                  <li key={k} className={i === 0 ? "pl-0" : "pl-6"}>
-                    <p className="font-display text-[22px] font-bold -tracking-[0.01em] text-fg">
-                      {t(`hero.stats.${k}.value`)}
-                    </p>
-                    <p className="text-xs font-medium tracking-[0.02em] text-fg-muted">
-                      {t(`hero.stats.${k}.label`)}
-                    </p>
-                  </li>
-                ))}
-              </ul>
+              {showStats ? (
+                <ul className="mt-2 flex flex-wrap items-center gap-6 divide-x divide-border-subtle">
+                  {[
+                    { key: "executors", value: formatStat(stats.executors), label: t("hero.stats.executors.label") },
+                    { key: "deals", value: formatStat(stats.deals), label: t("hero.stats.deals.label") },
+                    ...(stats.rating != null
+                      ? [{ key: "rating", value: `${stats.rating.toFixed(1)} ★`, label: t("hero.stats.rating.label") }]
+                      : []),
+                  ].map((s, i) => (
+                    <li key={s.key} className={i === 0 ? "pl-0" : "pl-6"}>
+                      <p className="font-display text-[22px] font-bold -tracking-[0.01em] text-fg">
+                        {s.value}
+                      </p>
+                      <p className="text-xs font-medium tracking-[0.02em] text-fg-muted">
+                        {s.label}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <ul className="mt-2 flex flex-wrap items-center gap-6 divide-x divide-border-subtle">
+                  {[
+                    { icon: "🔒", label: "Платёж через escrow" },
+                    { icon: "🛡", label: "Анонимно от ВУЗа" },
+                    { icon: "✓", label: "10% комиссии" },
+                  ].map((t, i) => (
+                    <li
+                      key={t.label}
+                      className={`flex items-center gap-2 ${i === 0 ? "pl-0" : "pl-6"}`}
+                    >
+                      <span className="text-brand">{t.icon}</span>
+                      <span className="text-[13px] font-medium text-fg-secondary">
+                        {t.label}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
 
             <div className="relative">
