@@ -106,14 +106,14 @@ export function TelegramCard({
             aria-checked={notifyEnabled}
             onClick={toggleNotify}
             disabled={pending}
-            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
+            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors p-0.5 ${
               notifyEnabled ? "bg-brand" : "bg-border-strong"
             }`}
           >
             <span
               aria-hidden
-              className={`absolute top-0.5 size-5 rounded-full bg-white shadow-sm transition-transform ${
-                notifyEnabled ? "translate-x-[22px]" : "translate-x-0.5"
+              className={`block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
+                notifyEnabled ? "translate-x-[20px]" : "translate-x-0"
               }`}
             />
           </button>

@@ -96,15 +96,15 @@ function ToggleRow({
         aria-checked={checked}
         onClick={() => onChange(!checked)}
         className={cn(
-          "relative h-6 w-11 shrink-0 rounded-full transition-colors",
+          "relative h-6 w-11 shrink-0 rounded-full transition-colors p-0.5",
           checked ? "bg-brand" : "bg-border-strong"
         )}
       >
         <span
           aria-hidden
           className={cn(
-            "absolute top-0.5 size-5 rounded-full bg-white shadow-sm transition-transform",
-            checked ? "translate-x-[22px]" : "translate-x-0.5"
+            "block h-5 w-5 rounded-full bg-white shadow-sm transition-transform",
+            checked ? "translate-x-[20px]" : "translate-x-0"
           )}
         />
       </button>
