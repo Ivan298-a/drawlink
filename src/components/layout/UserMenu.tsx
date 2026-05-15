@@ -99,6 +99,18 @@ export function UserMenu({ user }: Props) {
               label="Настройки и приватность"
               onSelect={() => setOpen(false)}
             />
+            {user.role === "ADMIN" && (
+              <>
+                <div className="my-1 border-t border-border-subtle" />
+                <MenuLink
+                  href="/admin"
+                  icon="🛡"
+                  label="Админ-панель"
+                  onSelect={() => setOpen(false)}
+                  accent
+                />
+              </>
+            )}
           </nav>
 
           <div className="border-t border-border-subtle p-1.5">
@@ -124,20 +136,27 @@ function MenuLink({
   icon,
   label,
   onSelect,
+  accent,
 }: {
   href: string;
   icon: string;
   label: string;
   onSelect: () => void;
+  accent?: boolean;
 }) {
   return (
     <Link
       href={href}
       role="menuitem"
       onClick={onSelect}
-      className="flex items-center gap-3 rounded-[8px] px-3 py-2 text-[13px] font-medium text-fg transition-colors hover:bg-elevated"
+      className={cn(
+        "flex items-center gap-3 rounded-[8px] px-3 py-2 text-[13px] font-medium transition-colors",
+        accent
+          ? "text-brand hover:bg-[color:oklch(0.69_0.16_70/0.12)]"
+          : "text-fg hover:bg-elevated"
+      )}
     >
-      <span className="text-fg-muted" aria-hidden>
+      <span className={accent ? "text-brand" : "text-fg-muted"} aria-hidden>
         {icon}
       </span>
       <span>{label}</span>
