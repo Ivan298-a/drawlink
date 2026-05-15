@@ -46,8 +46,8 @@ export default function PrivacyPolicyPage() {
             Оператором персональных данных является команда DrawLink. После
             регистрации юридического лица в этом разделе появятся полные
             реквизиты. Связаться:{" "}
-            <a className="text-brand hover:underline" href="mailto:hello@drawlink.app">
-              hello@drawlink.app
+            <a className="text-brand hover:underline" href="https://t.me/missssbutstillworking">
+              @missssbutstillworking в Telegram
             </a>
             .
           </p>
@@ -234,11 +234,11 @@ export default function PrivacyPolicyPage() {
         <Section title="12. Контакты">
           <p>
             По любым вопросам о персональных данных:{" "}
-            <a className="text-brand hover:underline" href="mailto:hello@drawlink.app">
-              hello@drawlink.app
+            <a className="text-brand hover:underline" href="https://t.me/missssbutstillworking">
+              @missssbutstillworking в Telegram
             </a>
             ,{" "}
-            <a className="text-brand hover:underline" href="https://t.me/drawlink_support">
+            <a className="text-brand hover:underline" href="https://t.me/missssbutstillworking">
               Telegram-поддержка
             </a>
             .

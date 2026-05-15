@@ -11,7 +11,7 @@ export function Footer() {
       links: [
         { label: t("columns.platform.links.catalog"), href: "/catalog" },
         { label: t("columns.platform.links.orders"), href: "/orders" },
-        { label: t("columns.platform.links.categories"), href: "/categories" },
+        { label: t("columns.platform.links.categories"), href: "/catalog" },
         { label: t("columns.platform.links.how"), href: "/how-it-works" },
       ],
     },
@@ -21,7 +21,7 @@ export function Footer() {
         { label: t("columns.executors.links.become"), href: "/become-executor" },
         { label: t("columns.executors.links.tariffs"), href: "/tariffs" },
         { label: t("columns.executors.links.rules"), href: "/rules" },
-        { label: t("columns.executors.links.faq"), href: "/faq" },
+        { label: t("columns.executors.links.faq"), href: "/help" },
       ],
     },
     {
@@ -29,8 +29,8 @@ export function Footer() {
       links: [
         { label: t("columns.support.links.help"), href: "/help" },
         { label: t("columns.support.links.disputes"), href: "/disputes" },
-        { label: t("columns.support.links.telegram"), href: "https://t.me/" },
-        { label: t("columns.support.links.contact"), href: "/contact" },
+        { label: t("columns.support.links.telegram"), href: "https://t.me/missssbutstillworking" },
+        { label: t("columns.support.links.contact"), href: "https://t.me/missssbutstillworking" },
       ],
     },
   ];

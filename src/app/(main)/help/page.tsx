@@ -237,7 +237,7 @@ export default function HelpPage() {
         </div>
         <div className="flex flex-wrap gap-3">
           <Link
-            href="https://t.me/drawlink_support"
+            href="https://t.me/missssbutstillworking"
             target="_blank"
             rel="noopener noreferrer"
             className="btn-shimmer inline-flex h-11 items-center gap-2 rounded-[10px] bg-brand px-5 text-sm font-semibold text-brand-foreground"
@@ -245,7 +245,7 @@ export default function HelpPage() {
             ✈️ Telegram-поддержка
           </Link>
           <Link
-            href="mailto:hello@drawlink.app"
+            href="https://t.me/missssbutstillworking"
             className="btn-shimmer btn-shimmer-amber inline-flex h-11 items-center gap-2 rounded-[10px] border border-border-strong bg-elevated px-5 text-sm font-semibold text-fg"
           >
             Email

@@ -179,9 +179,9 @@ export default function RulesPage() {
 
         <Section title="10. Контакты">
           <p>
-            Поддержка: <a className="text-brand hover:underline" href="https://t.me/drawlink_support">Telegram-поддержка</a> или{" "}
-            <a className="text-brand hover:underline" href="mailto:hello@drawlink.app">
-              hello@drawlink.app
+            Поддержка: <a className="text-brand hover:underline" href="https://t.me/missssbutstillworking">Telegram-поддержка</a> или{" "}
+            <a className="text-brand hover:underline" href="https://t.me/missssbutstillworking">
+              @missssbutstillworking в Telegram
             </a>
             .
           </p>

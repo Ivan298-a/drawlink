@@ -214,11 +214,11 @@ export default function TermsPage() {
         <Section title="11. Реквизиты и контакты">
           <p>
             Контакт для обращений:{" "}
-            <a className="text-brand hover:underline" href="mailto:hello@drawlink.app">
-              hello@drawlink.app
+            <a className="text-brand hover:underline" href="https://t.me/missssbutstillworking">
+              @missssbutstillworking в Telegram
             </a>
             ,{" "}
-            <a className="text-brand hover:underline" href="https://t.me/drawlink_support">
+            <a className="text-brand hover:underline" href="https://t.me/missssbutstillworking">
               Telegram-поддержка
             </a>
             .
