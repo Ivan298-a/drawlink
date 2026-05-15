@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/Badge";
 import { PrivacyForm } from "./PrivacyForm";
 import { CityForm } from "./CityForm";
 import { TelegramCard } from "./TelegramCard";
+import { NicknameForm } from "./NicknameForm";
 import { telegramConfigured } from "@/lib/telegram";
 
 export const metadata = { title: "Настройки — DrawLink" };
@@ -66,12 +67,14 @@ export default async function SettingsPage() {
             badge="Публичный профиль"
             title="Что видят другие"
           />
-          <dl className="flex flex-col gap-3">
-            <Row
-              label="Никнейм"
-              value={user.nickname}
-              hint="Можно сменить раз в 30 дней (скоро добавим)"
-            />
+          <dl className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2 border-b border-border-subtle pb-4 last:border-b-0 last:pb-0">
+              <span className="text-[13px] text-fg-secondary">Никнейм</span>
+              <NicknameForm
+                current={user.nickname}
+                changedAt={user.nicknameChangedAt}
+              />
+            </div>
             <Row
               label="Роль"
               value={

@@ -80,6 +80,64 @@ export async function toggleTelegramNotifyAction(): Promise<ActionResult> {
   return { ok: true };
 }
 
+const NICKNAME_COOLDOWN_DAYS = 30;
+const nicknameRegex = /^[a-zA-Z0-9._]+$/;
+const nicknameSchema = z.object({
+  nickname: z
+    .string()
+    .trim()
+    .min(3, "Минимум 3 символа")
+    .max(24, "Максимум 24 символа")
+    .regex(nicknameRegex, "Только латиница, цифры, _ и ."),
+});
+
+export async function updateNicknameAction(formData: FormData): Promise<ActionResult> {
+  const user = await requireUser();
+  const parsed = nicknameSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Ошибка" };
+  }
+  const newNickname = parsed.data.nickname;
+
+  if (newNickname === user.nickname) {
+    return { ok: false, error: "Это уже твой текущий никнейм" };
+  }
+
+  // Cooldown 30 дней
+  if (user.nicknameChangedAt) {
+    const nextAllowed = new Date(
+      user.nicknameChangedAt.getTime() + NICKNAME_COOLDOWN_DAYS * 24 * 60 * 60 * 1000
+    );
+    if (nextAllowed.getTime() > Date.now()) {
+      const daysLeft = Math.ceil(
+        (nextAllowed.getTime() - Date.now()) / (24 * 60 * 60 * 1000)
+      );
+      return {
+        ok: false,
+        error: `Менять никнейм можно раз в 30 дней. Следующая смена доступна через ${daysLeft} ${daysLeft === 1 ? "день" : daysLeft < 5 ? "дня" : "дней"}.`,
+      };
+    }
+  }
+
+  // Уникальность
+  const exists = await db.user.findUnique({ where: { nickname: newNickname } });
+  if (exists) {
+    return { ok: false, error: "Никнейм уже занят" };
+  }
+
+  await db.user.update({
+    where: { id: user.id },
+    data: {
+      nickname: newNickname,
+      nicknameChangedAt: new Date(),
+    },
+  });
+
+  revalidatePath("/settings");
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
 const cityChangeSchema = z.object({
   cityId: z.coerce.number().int().positive("Выберите город"),
 });

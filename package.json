@@ -13,6 +13,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:realtime": "tsx prisma/setup-realtime.ts",
     "db:storage": "tsx prisma/setup-storage.ts",
+    "db:rls": "tsx prisma/setup-rls.ts",
     "db:admin": "tsx prisma/promote-admin.ts",
     "bot:dev": "tsx prisma/bot-dev.ts",
     "db:studio": "prisma studio"
