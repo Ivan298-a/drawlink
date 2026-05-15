@@ -2,11 +2,11 @@
   "crons": [
     {
       "path": "/api/cron/auto-release",
-      "schedule": "*/10 * * * *"
+      "schedule": "0 8 * * *"
     },
     {
       "path": "/api/cron/auto-arbitrage",
-      "schedule": "*/10 * * * *"
+      "schedule": "0 9 * * *"
     }
   ]
 }
