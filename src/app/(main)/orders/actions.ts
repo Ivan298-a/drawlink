@@ -7,6 +7,11 @@ import { requireUser } from "@/lib/auth";
 import { generateOrderCode } from "@/lib/orders/code";
 import { createOfferSchema, createOrderSchema } from "@/lib/validation/orders";
 import { notifyNewOffer, notifyOfferAccepted } from "@/lib/telegram-handler";
+import {
+  RATE_LIMIT_ERROR,
+  checkOfferRateLimit,
+  checkOrderRateLimit,
+} from "@/lib/rate-limit";
 
 export type ActionResult =
   | { ok: true; redirect?: string }
@@ -23,6 +28,10 @@ function collectFieldErrors(error: import("zod").ZodError): Record<string, strin
 
 export async function createOrderAction(formData: FormData): Promise<ActionResult> {
   const user = await requireUser("/orders/new");
+
+  if (!(await checkOrderRateLimit(user.id))) {
+    return { ok: false, error: RATE_LIMIT_ERROR };
+  }
 
   // fileFormats — multi-select, нужно собрать все значения
   const formats = formData.getAll("fileFormats").map(String);
@@ -79,6 +88,9 @@ export async function submitOfferAction(formData: FormData): Promise<ActionResul
   const user = await requireUser();
   if (user.role !== "EXECUTOR" && user.role !== "ADMIN") {
     return { ok: false, error: "Только исполнители могут откликаться" };
+  }
+  if (!(await checkOfferRateLimit(user.id))) {
+    return { ok: false, error: RATE_LIMIT_ERROR };
   }
 
   const parsed = createOfferSchema.safeParse(Object.fromEntries(formData));

@@ -11,6 +11,7 @@ import {
   resolveDisputeSchema,
 } from "@/lib/validation/disputes";
 import { notifyDisputeOpened } from "@/lib/telegram-handler";
+import { RATE_LIMIT_ERROR, checkDisputeRateLimit } from "@/lib/rate-limit";
 
 export type ActionResult =
   | { ok: true; data?: Record<string, unknown> }
@@ -23,6 +24,9 @@ export type ActionResult =
  */
 export async function openDisputeAction(formData: FormData): Promise<ActionResult> {
   const user = await requireUser();
+  if (!(await checkDisputeRateLimit(user.id))) {
+    return { ok: false, error: RATE_LIMIT_ERROR };
+  }
   const parsed = openDisputeSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Ошибка" };

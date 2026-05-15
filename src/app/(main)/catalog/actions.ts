@@ -8,6 +8,10 @@ import { requireUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 import { generateCatalogCode } from "@/lib/orders/code";
 import { publishCatalogItemSchema } from "@/lib/validation/catalog";
+import {
+  RATE_LIMIT_ERROR,
+  checkCatalogPublishRateLimit,
+} from "@/lib/rate-limit";
 
 export type ActionResult =
   | { ok: true; redirect?: string; data?: Record<string, unknown> }
@@ -62,6 +66,9 @@ export async function publishCatalogItemAction(
   const user = await requireUser("/catalog/new");
   if (user.role !== "EXECUTOR" && user.role !== "ADMIN") {
     return { ok: false, error: "Только исполнители могут публиковать работы" };
+  }
+  if (!(await checkCatalogPublishRateLimit(user.id))) {
+    return { ok: false, error: RATE_LIMIT_ERROR };
   }
 
   const formats = formData.getAll("formats").map(String);

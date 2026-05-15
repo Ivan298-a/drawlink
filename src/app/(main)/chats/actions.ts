@@ -15,6 +15,7 @@ import {
   notifyDealReleased,
   notifyNewChatMessage,
 } from "@/lib/telegram-handler";
+import { RATE_LIMIT_ERROR, checkMessageRateLimit } from "@/lib/rate-limit";
 
 export type ActionResult =
   | { ok: true; data?: Record<string, unknown> }
@@ -27,6 +28,9 @@ const sendMessageSchema = z.object({
 
 export async function sendMessageAction(formData: FormData): Promise<ActionResult> {
   const user = await requireUser();
+  if (!(await checkMessageRateLimit(user.id))) {
+    return { ok: false, error: RATE_LIMIT_ERROR };
+  }
   const parsed = sendMessageSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Ошибка" };
