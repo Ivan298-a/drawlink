@@ -142,15 +142,15 @@ export default async function LandingPage() {
                   ))}
                 </ul>
               ) : (
-                <ul className="mt-2 flex flex-wrap items-center gap-6 divide-x divide-border-subtle">
+                <ul className="mt-2 flex flex-wrap items-center gap-2">
                   {[
                     { icon: "🔒", label: "Платёж через escrow" },
                     { icon: "🛡", label: "Анонимно от ВУЗа" },
                     { icon: "✓", label: "10% комиссии" },
-                  ].map((t, i) => (
+                  ].map((t) => (
                     <li
                       key={t.label}
-                      className={`flex items-center gap-2 ${i === 0 ? "pl-0" : "pl-6"}`}
+                      className="flex items-center gap-2 rounded-full border border-border-subtle bg-surface px-3.5 py-1.5"
                     >
                       <span className="text-brand">{t.icon}</span>
                       <span className="text-[13px] font-medium text-fg-secondary">
