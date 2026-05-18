@@ -14,6 +14,8 @@
     "db:realtime": "tsx prisma/setup-realtime.ts",
     "db:storage": "tsx prisma/setup-storage.ts",
     "db:rls": "tsx prisma/setup-rls.ts",
+    "db:test-users": "tsx prisma/seed-test-users.ts",
+    "db:inspect": "tsx prisma/inspect.ts",
     "db:admin": "tsx prisma/promote-admin.ts",
     "bot:dev": "tsx prisma/bot-dev.ts",
     "db:studio": "prisma studio"

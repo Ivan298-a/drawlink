@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -36,6 +37,7 @@ export function CreateOrderForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const router = useRouter();
 
   function toggleFormat(v: string) {
     setFormats((curr) =>
@@ -56,14 +58,20 @@ export function CreateOrderForm({
       if (!result.ok) {
         setServerError(result.error);
         if (result.fieldErrors) setErrors(result.fieldErrors);
+      } else if (result.redirect) {
+        router.push(result.redirect);
       }
     });
   }
 
-  // Сегодня + 7 дней по умолчанию
-  const defaultDeadline = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .slice(0, 10);
+  // Сегодня + 7 дней по умолчанию. useState-инициализатор гарантирует
+  // одно и то же значение на SSR и при гидратации (без mismatch).
+  const [defaultDeadline] = useState(
+    () =>
+      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .slice(0, 10)
+  );
 
   return (
     <form action={onSubmit} className="grid gap-8 lg:grid-cols-[1fr_320px]" noValidate>

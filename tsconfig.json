@@ -38,6 +38,8 @@
     "prisma/setup-realtime.ts",
     "prisma/setup-storage.ts",
     "prisma/setup-rls.ts",
+    "prisma/seed-test-users.ts",
+    "prisma/inspect.ts",
     "prisma/promote-admin.ts"
   ]
 }

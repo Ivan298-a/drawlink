@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { generateOrderCode } from "@/lib/orders/code";
@@ -81,7 +80,7 @@ export async function createOrderAction(formData: FormData): Promise<ActionResul
   });
 
   revalidatePath("/orders");
-  redirect(`/orders/${order.code}`);
+  return { ok: true, redirect: `/orders/${order.code}` };
 }
 
 export async function submitOfferAction(formData: FormData): Promise<ActionResult> {
