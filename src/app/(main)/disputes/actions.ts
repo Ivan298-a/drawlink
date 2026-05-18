@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { generateDisputeCode } from "@/lib/orders/code";
@@ -103,7 +102,7 @@ export async function openDisputeAction(formData: FormData): Promise<ActionResul
 
   revalidatePath(`/chats/${dealId}`);
   revalidatePath("/dashboard");
-  redirect(`/disputes/${dispute.code}`);
+  return { ok: true, data: { redirect: `/disputes/${dispute.code}` } };
 }
 
 /**

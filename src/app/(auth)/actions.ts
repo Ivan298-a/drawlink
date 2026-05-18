@@ -1,13 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { signInSchema, signUpSchema } from "@/lib/validation/auth";
 
 export type ActionResult =
-  | { ok: true }
+  | { ok: true; redirect?: string }
   | { ok: false; error: string; fieldErrors?: Record<string, string> };
 
 export async function signUpAction(formData: FormData): Promise<ActionResult> {
@@ -78,12 +77,12 @@ export async function signUpAction(formData: FormData): Promise<ActionResult> {
     };
   }
 
-  // Если Supabase требует подтверждение email — перенаправляем на info-страницу
+  // Если Supabase требует подтверждение email — info-страница
   if (!data.session) {
-    redirect("/sign-up/check-email");
+    return { ok: true, redirect: "/sign-up/check-email" };
   }
   revalidatePath("/", "layout");
-  redirect("/");
+  return { ok: true, redirect: "/" };
 }
 
 export async function signInAction(formData: FormData): Promise<ActionResult> {
@@ -102,12 +101,12 @@ export async function signInAction(formData: FormData): Promise<ActionResult> {
     return { ok: false, error: "Неверный email или пароль" };
   }
   revalidatePath("/", "layout");
-  redirect("/");
+  return { ok: true, redirect: "/" };
 }
 
-export async function signOutAction() {
+export async function signOutAction(): Promise<ActionResult> {
   const supabase = await createSupabaseServerClient();
   await supabase.auth.signOut();
   revalidatePath("/", "layout");
-  redirect("/");
+  return { ok: true, redirect: "/" };
 }

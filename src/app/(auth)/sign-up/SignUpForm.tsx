@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -10,6 +11,7 @@ import { signUpAction, type ActionResult } from "../actions";
 type City = { id: number; name: string; region: string | null };
 
 export function SignUpForm({ cities }: { cities: City[] }) {
+  const router = useRouter();
   const [role, setRole] = useState<"STUDENT" | "EXECUTOR">("STUDENT");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState<string | null>(null);
@@ -24,6 +26,9 @@ export function SignUpForm({ cities }: { cities: City[] }) {
       if (!result.ok) {
         setServerError(result.error);
         if (result.fieldErrors) setErrors(result.fieldErrors);
+      } else if (result.redirect) {
+        router.push(result.redirect);
+        router.refresh();
       }
     });
   }

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
-import { signOutAction } from "@/app/(auth)/actions";
+import { SignOutButton } from "./SignOutButton";
 
 type Props = {
   user: {
@@ -114,16 +114,12 @@ export function UserMenu({ user }: Props) {
           </nav>
 
           <div className="border-t border-border-subtle p-1.5">
-            <form action={signOutAction}>
-              <button
-                type="submit"
-                role="menuitem"
-                className="flex w-full items-center gap-3 rounded-[8px] px-3 py-2 text-left text-[13px] font-medium text-[color:var(--color-danger)] transition-colors hover:bg-[color:oklch(0.62_0.20_25/0.12)]"
-              >
-                <span aria-hidden>↪</span>
-                <span>Выйти</span>
-              </button>
-            </form>
+            <SignOutButton
+              className="flex w-full items-center gap-3 rounded-[8px] px-3 py-2 text-left text-[13px] font-medium text-[color:var(--color-danger)] transition-colors hover:bg-[color:oklch(0.62_0.20_25/0.12)]"
+            >
+              <span aria-hidden>↪</span>
+              <span>Выйти</span>
+            </SignOutButton>
           </div>
         </div>
       )}

@@ -167,8 +167,10 @@ function OpenDisputeModal({
       if (!result.ok) {
         setError(result.error);
       } else {
-        router.refresh();
         onClose();
+        const to = result.data?.redirect as string | undefined;
+        if (to) router.push(to);
+        else router.refresh();
       }
     });
   }

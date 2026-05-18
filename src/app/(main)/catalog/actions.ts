@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
@@ -110,7 +109,7 @@ export async function publishCatalogItemAction(
   });
 
   revalidatePath("/catalog");
-  redirect(`/catalog/${item.code}`);
+  return { ok: true, redirect: `/catalog/${item.code}` };
 }
 
 const purchaseSchema = z.object({

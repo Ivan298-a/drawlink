@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
-import { signOutAction } from "@/app/(auth)/actions";
+import { SignOutButton } from "@/components/layout/SignOutButton";
 
 export const metadata = { title: "Админ — DrawLink" };
 
@@ -92,14 +92,9 @@ export default async function AdminLayout({
           >
             ← На сайт
           </Link>
-          <form action={signOutAction}>
-            <button
-              type="submit"
-              className="w-full rounded-[8px] px-3 py-2 text-left text-[12px] font-medium text-[color:var(--color-danger)] transition-colors hover:bg-[color:oklch(0.62_0.20_25/0.12)]"
-            >
-              Выйти
-            </button>
-          </form>
+          <SignOutButton className="w-full rounded-[8px] px-3 py-2 text-left text-[12px] font-medium text-[color:var(--color-danger)] transition-colors hover:bg-[color:oklch(0.62_0.20_25/0.12)]">
+            Выйти
+          </SignOutButton>
         </div>
       </aside>
 

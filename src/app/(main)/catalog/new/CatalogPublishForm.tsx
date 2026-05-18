@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -55,6 +56,7 @@ export function CatalogPublishForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const router = useRouter();
 
   function toggleFormat(v: string) {
     setFormats((curr) =>
@@ -121,6 +123,8 @@ export function CatalogPublishForm({
       if (!result.ok) {
         setServerError(result.error);
         if (result.fieldErrors) setErrors(result.fieldErrors);
+      } else if (result.redirect) {
+        router.push(result.redirect);
       }
     });
   }

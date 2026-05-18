@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { signInAction, type ActionResult } from "../actions";
 
 export function SignInForm() {
+  const router = useRouter();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [serverError, setServerError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -19,6 +21,9 @@ export function SignInForm() {
       if (!result.ok) {
         setServerError(result.error);
         if (result.fieldErrors) setErrors(result.fieldErrors);
+      } else if (result.redirect) {
+        router.push(result.redirect);
+        router.refresh();
       }
     });
   }
